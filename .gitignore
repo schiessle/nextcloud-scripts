@@ -1,3 +1,4 @@
 github.cfg
 *.pyc
 .idea/*
+*~
