@@ -28,6 +28,10 @@ else
     git clone git@github.com:nextcloud/server.git .
 fi
 
+echo "Update 3rd party repository"
+cd $root/$inst_dir
+git submodule update --init
+
 # set the correct permissions for the data folder
 echo "Update data folder permissions"
 sudo chmod 770 $root$inst_dir/data
