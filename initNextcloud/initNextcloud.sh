@@ -28,6 +28,9 @@ else
     git clone git@github.com:nextcloud/server.git .
 fi
 
+git remote add owncloud git@github.com:owncloud/core.git
+git fetch owncloud
+
 echo "Update 3rd party repository"
 cd $root/$inst_dir
 git submodule update --init
