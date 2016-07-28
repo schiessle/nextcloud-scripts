@@ -9,6 +9,8 @@ admin_password='admin'
 
 declare -A apps=(
     ['files_texteditor']='git@github.com:owncloud/files_texteditor.git'
+    ['notifications']='git@github.com:nextcloud/notifications.git'
+    ['firstrunwizard']='git@github.com:nextcloud/firstrunwizard.git'
 )
 
 # install or reset server
