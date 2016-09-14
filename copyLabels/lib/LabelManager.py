@@ -40,20 +40,25 @@ class LabelManager:
                     'color': label['color'],
                 }
                 response = requests.get(url + '/' + label['name'], headers=self.headers)
+                if response.status_code == 403:
+                    print '[' + repo + '] Rate limit reached'
+                    return
+
+
                 # if the label already exists we update it, otherwise we create a new one
                 if response.status_code == 200:
                     checkLabel = json.loads(response.content)
                     if not label['color'] == label['color']:
-                        print 'Update label: "' + label['name'] + '" (Color: #' + label['color'] + ')'
+                        print '[' + repo + '] Update label: "' + label['name'] + '" (Color: #' + label['color'] + ')'
                         requests.patch(url + '/' + label['name'], data=json.dumps(payload), headers=self.headers)
                     else:
-                        print 'Skip unchanged label: "' + label['name'] + '"'
+                        print '[' + repo + '] Skip unchanged label: "' + label['name'] + '"'
 
                 else:
-                    print 'Create label: "' + label['name'] + '" (Color: #' + label['color'] + ')'
+                    print '[' + repo + '] Create label: "' + label['name'] + '" (Color: #' + label['color'] + ')'
                     requests.post(url, data=json.dumps(payload), headers=self.headers)
             else:
-                print 'Skip feature label: "' + label['name'] + '"'
+                print '[' + repo + '] Skip feature label: "' + label['name'] + '"'
 
     def delete_all_labels(self, repo):
         """
