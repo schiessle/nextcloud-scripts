@@ -19,7 +19,7 @@ class LabelManager:
         get all labels from the Nextcloud server repository
         :return: list of all server labels
         """
-        url = self.nextcloudBaseUrl + repo + '/labels'
+        url = self.nextcloudBaseUrl + repo + '/labels?per_page=100'
         response = requests.get(url)
         data = json.loads(response.content)
         return data
