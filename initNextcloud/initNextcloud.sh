@@ -7,17 +7,28 @@ inst_dir='master'
 admin_user='admin'
 admin_password='admin'
 
+if [ $# -eq 0 ]
+  then
+    branch=master
+else
+    branch=$1
+fi
+
 declare -A apps=(
-    ['files_texteditor']='git@github.com:owncloud/files_texteditor.git'
+    ['files_texteditor']='git@github.com:nextcloud/files_texteditor.git'
     ['notifications']='git@github.com:nextcloud/notifications.git'
     ['firstrunwizard']='git@github.com:nextcloud/firstrunwizard.git'
+    ['activity']='git@github.com:nextcloud/activity.git'
+    ['password_policy']='git@github.com:nextcloud/password_policy.git'
+    ['files_videoplayer']='git@github.com:nextcloud/files_videoplayer.git'
+    ['gallery']='git@github.com:nextcloud/gallery.git'
 )
 
 # install or reset server
 if [ -d $root$inst_dir ]; then
     echo "Reset server installation"
     cd $root$inst_dir
-    git checkout master
+    git checkout $branch
     git pull
     # cleanup data directory
     sudo rm $root$inst_dir/data/* -rf
@@ -28,6 +39,7 @@ else
     mkdir $root$inst_dir
     cd $root$inst_dir
     git clone git@github.com:nextcloud/server.git .
+    git checkout $branch
 fi
 
 git remote add owncloud git@github.com:owncloud/core.git
@@ -52,14 +64,15 @@ for key in "${!apps[@]}"; do
     if [ -d $root$inst_dir/apps/$key ]; then
 	echo "Reset $key"
 	cd $root$inst_dir/apps/$key
-	git checkout master
 	git pull
+	git checkout $branch
     else
 	echo "Install $key"
 	mkdir $root$inst_dir/apps/$key
 	cd $root$inst_dir/apps/$key
 	echo "git clone ${apps[$key]} ."
 	git clone ${apps[$key]} .
+	git checkout $branch
     fi
 done
 
@@ -74,7 +87,14 @@ sudo chmod 660 $root$inst_dir/config/config.php
 
 # create users
 echo "Create $number_of_users users"
+
+# disable password policy
+sudo -u www-data $root$inst_dir/occ app:disable password_policy
+
 for (( i=1; i<=$number_of_users; i++ ))
 do
-    curl http://$admin_user:$admin_password@localhost/$inst_dir/ocs/v1.php/cloud/users -d userid="user$i" -d password="user$i" &> /dev/null
+    curl http://$admin_user:$admin_password@localhost/$inst_dir/ocs/v1.php/cloud/users -d userid="user$i" -d password="user$i" -H "OCS-APIRequest: true" &> /dev/null
 done
+
+# enable password policy
+sudo -u www-data $root$inst_dir/occ app:enable password_policy

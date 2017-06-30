@@ -33,3 +33,11 @@ a script to set up a new Nextcloud installation or reset a existing one for deve
 ### Usage
 
 `./initNextcloud.sh`
+
+## switchBranch
+
+Allows you to switch Nextcloud and all installed app to a new branch or tag. The script needs to be executed in the root of the Nextcloud installation. If no branch/tag is given the script will switch the installation to master
+
+### Usage
+
+`./switchBranch.sh <branch/tag>`
