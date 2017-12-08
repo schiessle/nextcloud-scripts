@@ -28,8 +28,13 @@ for f in apps/*; do
     fi
 done
 
+echo "run git fetch..."
 git fetch &> /dev/null
+echo "switch server to $branch"
 git checkout $branch &> /dev/null
+echo "run git pull..."
 git pull &> /dev/null
+echo "update submodules..."
+git submodule update --init
 
 ssh-add -D
