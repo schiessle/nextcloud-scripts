@@ -1,18 +1,68 @@
 #!/bin/bash
 
+eval `ssh-agent -s`
+ssh-add
+
 database='sqlite'
 number_of_users=10
 root='/home/schiesbn/repos/nextcloud/server/'
-inst_dir='master'
 admin_user='admin'
 admin_password='admin'
 
-if [ $# -eq 0 ]
-  then
-    branch=master
-else
-    branch=$1
+while getopts b:s:d: option
+do
+ case "${option}"
+ in
+     b) branch=${OPTARG};;
+     d) inst_dir=${OPTARG};;
+     s) storage=${OPTARG};;
+ esac
+done
+
+
+if [ -z $branch ]
+then
+    branch='master'
 fi
+
+
+if [ -z $inst_dir ]
+then
+    inst_dir='master'
+fi
+
+if [ -z $storage ]
+then
+    storage="fs"
+fi
+
+if [ $storage == "s3" ]
+then
+    killall fakes3
+    rm -rf /home/schiesbn/tmp/fakes3
+    fakes3 --root /home/schiesbn/tmp/fakes3 --port 4567 &
+    autoconf="<?php\n
+\$AUTOCONFIG = array (
+'objectstore' =>\n
+		array (\n
+    'class' => 'OC\\Files\\ObjectStore\\S3',\n
+    'arguments' => \n
+    array (\n
+      'bucket' => 'abc',\n
+      'key' => '123',\n
+      'secret' => 'abc',\n
+      'hostname' => '127.0.0.1',\n
+      'port' => '4567',\n
+      'use_ssl' => false,\n
+      'use_path_style' => true,\n
+    ),\n
+  ),\n
+)\n
+"
+    sudo rm $root$inst_dir/config/autoconfig.php
+    echo -e $autoconf > $root$inst_dir/config/autoconfig.php
+fi
+
 
 declare -A apps=(
     ['files_texteditor']='git@github.com:nextcloud/files_texteditor.git'
@@ -76,9 +126,14 @@ for key in "${!apps[@]}"; do
     fi
 done
 
+if [ $storage == "s3" ]
+then
+    exit 0;
+fi
+
 # execute initial setup
 echo "Run initial setup"
-sudo -u www-data $root$inst_dir/occ maintenance:install --database=$database --admin-user=$admin_user --admin-pass=$admin_password
+sudo -u www-data php $root$inst_dir/occ maintenance:install --database=$database --admin-user=$admin_user --admin-pass=$admin_password
 
 # set the correct permissions for the config.php
 echo "Update config permissions"
@@ -98,3 +153,6 @@ done
 
 # enable password policy
 sudo -u www-data $root$inst_dir/occ app:enable password_policy
+
+
+ssh-add -D
